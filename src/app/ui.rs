@@ -11,6 +11,7 @@ use url::Url;
 use crate::{
     app::{
         constants::get_resource_color,
+        icons::IconSet,
         outline::WorldOutline,
         plot_item::{ResourceDisplay, ResourceDisplayContent},
         view_options::{ViewOptions, ViewOptionsTarget},
@@ -50,6 +51,8 @@ pub struct App {
     view_options: ViewOptions,
 
     outline: WorldOutline,
+
+    icons: IconSet,
 }
 
 impl Default for App {
@@ -69,6 +72,7 @@ impl Default for App {
             view_options: ViewOptions::new(),
 
             outline: WorldOutline::new(),
+            icons: IconSet::default(),
         }
     }
 }
@@ -76,21 +80,21 @@ impl Default for App {
 impl App {
     pub const PUBLIC_URL: Option<&'static str> = option_env!("PUBLIC_URL");
 
-    pub fn new(_cc: &eframe::CreationContext<'_>, startup_url: Option<&str>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, startup_url: Option<&str>) -> Self {
+        let mut app = Self::default();
+
+        app.icons = IconSet::load(&cc.egui_ctx);
+
         if let Some(params) = startup_url
             .and_then(|url| Url::parse(url).ok())
             .and_then(|url| serde_urlencoded::from_str::<QueryParams>(url.query()?).ok())
         {
-            Self {
-                seed: Some(params.seed),
-                randomization_mode: params.mode,
-                purity_settings: params.purity,
-
-                ..Default::default()
-            }
-        } else {
-            Default::default()
+            app.seed = Some(params.seed);
+            app.randomization_mode = params.mode;
+            app.purity_settings = params.purity;
         }
+
+        app
     }
 
     pub const fn supports_share_link() -> bool {
@@ -524,7 +528,9 @@ impl eframe::App for App {
                         ResourceDisplayContent::ResourceNodes(resource, nodes.collect()),
                         &self.view_options,
                         view_options_highlight,
+                        self.icons.resource(resource).map(|i| i.id()),
                     ));
+
                 }
 
                 // fracking nodes
@@ -534,6 +540,7 @@ impl eframe::App for App {
                         ResourceDisplayContent::FrackingNodes(resource, cores.collect()),
                         &self.view_options,
                         view_options_highlight,
+                        self.icons.resource(resource).map(|i| i.id()),
                     ));
                 }
 
@@ -543,6 +550,7 @@ impl eframe::App for App {
                     ResourceDisplayContent::Geysers(world.geysers.iter().by_ref().collect()),
                     &self.view_options,
                     view_options_highlight,
+                    None
                 ));
             });
 

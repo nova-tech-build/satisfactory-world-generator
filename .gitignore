@@ -1,8 +1,11 @@
 /target
 /dist
+/tmp
 
 /scripts/extracted-resources.json
 /src/default-world.json
 /src/world-outline.json
 
 /scripts/*.dll
+
+/assets/icons/*.png

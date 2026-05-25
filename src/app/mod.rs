@@ -3,6 +3,7 @@ mod outline;
 mod plot_item;
 mod ui;
 mod view_options;
+mod icons;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_app() -> eframe::Result {

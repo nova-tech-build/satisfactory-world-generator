@@ -73,6 +73,7 @@ pub struct ResourceDisplay<'a> {
     view_options: &'a ViewOptions,
     view_options_highlight: Option<ViewOptionsTarget>,
     plot_highlight: bool,
+    icon: Option<egui::TextureId>,
 }
 
 impl<'a> ResourceDisplay<'a> {
@@ -81,6 +82,7 @@ impl<'a> ResourceDisplay<'a> {
         content: ResourceDisplayContent<'a>,
         view_options: &'a ViewOptions,
         highlight: Option<ViewOptionsTarget>,
+        icon: Option<egui::TextureId>,
     ) -> Self {
         let name = match content {
             ResourceDisplayContent::ResourceNodes(resource, _)
@@ -98,6 +100,7 @@ impl<'a> ResourceDisplay<'a> {
             view_options,
             view_options_highlight: highlight,
             plot_highlight: false,
+            icon,
         }
     }
 
@@ -198,6 +201,25 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                         true,
                         shapes,
                     );
+              
+                    if let Some(icon) = self.icon {
+                        let size = self.marker_base_size * 1.5 * scale;
+
+                        let rect = egui::Rect::from_center_size(
+                            center,
+                            egui::vec2(size, size),
+                        );
+
+                        shapes.push(egui::Shape::image(
+                            icon,
+                            rect,
+                            egui::Rect::from_min_max(
+                                egui::pos2(0.0, 0.0),
+                                egui::pos2(1.0, 1.0),
+                            ),
+                            egui::Color32::WHITE,
+                        ));
+                    }
                 }
             }
 
