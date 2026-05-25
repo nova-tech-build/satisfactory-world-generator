@@ -1,19 +1,18 @@
 use std::{f32, ops::RangeInclusive};
 
-use egui::{Color32, PopupAnchor, Pos2, Shape, Stroke, epaint::CircleShape, vec2};
+use egui::{Color32, PopupAnchor, Pos2, Shape, Stroke, epaint::CircleShape};
 use egui_plot::{
-    Cursor, LabelFormatter, MarkerShape, PlotBounds, PlotGeometry, PlotItem, PlotItemBase,
+    Cursor, LabelFormatter, PlotBounds, PlotGeometry, PlotItem, PlotItemBase,
     PlotPoint, PlotTransform,
 };
 
 use crate::{
     app::{
-        constants::{get_purity_marker, get_resource_color},
+        constants::{get_purity_color, get_resource_color},
         view_options::{ViewOptions, ViewOptionsTarget},
     },
     game::{FrackingCore, GeyserNode, ResourceDescriptor, ResourceNode},
 };
-use crate::app::constants::{get_purity_color, get_resource_stroke};
 
 pub enum ResourceDisplayContent<'a> {
     ResourceNodes(ResourceDescriptor, Vec<&'a ResourceNode>),
@@ -105,53 +104,35 @@ impl<'a> ResourceDisplay<'a> {
         }
     }
 
-    fn marker_shape(
-        shape: MarkerShape,
+    fn marker(
         center: Pos2,
         radius: f32,
-        color: Color32,
-        strokeColor: Color32,
+        fill_color: Color32,
+        stroke_color: Color32,
+        icon: Option<egui::TextureId>,
         shapes: &mut Vec<Shape>
     ) {
-        let sqrt_3 = 3_f32.sqrt();
-        let frac_sqrt_3_2 = 3_f32.sqrt() / 2.0;
+        shapes.push(Shape::Circle(CircleShape {
+            center,
+            radius,
+            fill: fill_color,
+            stroke: Stroke::new(radius / 10.0, stroke_color),
+        }));
 
-        let fill = color;
-        let stroke = Stroke::new(radius / 10.0, strokeColor);
-
-        let tf = |dx: f32, dy: f32| -> Pos2 { center + radius * vec2(dx, dy) };
-
-        match shape {
-            MarkerShape::Up => {
-                let points = vec![tf(0.0, -1.0), tf(0.5 * sqrt_3, 0.5), tf(-0.5 * sqrt_3, 0.5)];
-                shapes.push(Shape::convex_polygon(points, fill, stroke));
-            }
-            MarkerShape::Diamond => {
-                let points = vec![
-                    tf(0.0, 1.0),  // bottom
-                    tf(-1.0, 0.0), // left
-                    tf(0.0, -1.0), // top
-                    tf(1.0, 0.0),  // right
-                ];
-                shapes.push(Shape::convex_polygon(points, fill, stroke));
-            }
-            MarkerShape::Circle => {
-                shapes.push(Shape::Circle(CircleShape {
+        if let Some(icon) = icon {
+            let icon_size = radius * 1.5;
+            shapes.push(egui::Shape::image(
+                icon,
+                egui::Rect::from_center_size(
                     center,
-                    radius,
-                    fill,
-                    stroke,
-                }));
-            }
-            MarkerShape::Asterisk => {
-                let vertical = [tf(0.0, -1.0), tf(0.0, 1.0)];
-                let diagonal1 = [tf(-frac_sqrt_3_2, 0.5), tf(frac_sqrt_3_2, -0.5)];
-                let diagonal2 = [tf(-frac_sqrt_3_2, -0.5), tf(frac_sqrt_3_2, 0.5)];
-                shapes.push(Shape::line_segment(vertical, stroke));
-                shapes.push(Shape::line_segment(diagonal1, stroke));
-                shapes.push(Shape::line_segment(diagonal2, stroke));
-            }
-            _ => (),
+                    egui::vec2(icon_size, icon_size),
+                ),
+                egui::Rect::from_min_max(
+                    egui::pos2(0.0, 0.0),
+                    egui::pos2(1.0, 1.0),
+                ),
+                egui::Color32::WHITE,
+            ))
         }
     }
 }
@@ -191,33 +172,14 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                     let center = transform.position_from_point(
                         &ResourceDisplayContent::convert_location(node.location),
                     );
-                    Self::marker_shape(
-                        get_purity_marker(node.purity),
+                    Self::marker(
                         center,
                         self.marker_base_size * scale,
                         get_purity_color(node.purity),
-                        get_resource_stroke(*resource),
+                        get_resource_color(*resource),
+                        self.icon,
                         shapes,
                     );
-
-                    if let Some(icon) = self.icon {
-                        let size = self.marker_base_size * 1.5 * scale;
-
-                        let rect = egui::Rect::from_center_size(
-                            center,
-                            egui::vec2(size, size),
-                        );
-
-                        shapes.push(egui::Shape::image(
-                            icon,
-                            rect,
-                            egui::Rect::from_min_max(
-                                egui::pos2(0.0, 0.0),
-                                egui::pos2(1.0, 1.0),
-                            ),
-                            egui::Color32::WHITE,
-                        ));
-                    }
                 }
             }
 
@@ -241,52 +203,19 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                 };
 
                 for core in cores {
-                    let center = transform.position_from_point(
-                        &ResourceDisplayContent::convert_location(core.location),
-                    );
-
-                    /* recommend exluding the core since the cluster implies a core
-                    Self::marker_shape(
-                        MarkerShape::Circle,
-                        center,
-                        1.5 * self.marker_base_size * scale,
-                        color,
-                        false,
-                        shapes,
-                    );
-                    */
                     for satellite in &core.satellites {
                         let center = transform.position_from_point(
                             &ResourceDisplayContent::convert_location(satellite.location),
                         );
 
-                        Self::marker_shape(
-                            get_purity_marker(satellite.purity),
+                        Self::marker(
                             center,
                             0.75 * self.marker_base_size * scale,
                             get_purity_color(satellite.purity),
-                            get_resource_stroke(*resource),
+                            get_resource_color(*resource),
+                            self.icon,
                             shapes,
                         );
-
-                        if let Some(icon) = self.icon {
-                            let size = self.marker_base_size * 1.5 * scale;
-
-                            let rect = egui::Rect::from_center_size(
-                                center,
-                                egui::vec2(size, size),
-                            );
-
-                            shapes.push(egui::Shape::image(
-                                icon,
-                                rect,
-                                egui::Rect::from_min_max(
-                                    egui::pos2(0.0, 0.0),
-                                    egui::pos2(1.0, 1.0),
-                                ),
-                                egui::Color32::WHITE,
-                            ));
-                        }
                     }
                 }
             }
@@ -315,12 +244,12 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                         &ResourceDisplayContent::convert_location(geyser.location),
                     );
 
-                    Self::marker_shape(
-                        MarkerShape::Asterisk,
+                    Self::marker(
                         center,
                         self.marker_base_size * scale,
+                        get_purity_color(geyser.purity),
                         color,
-                        color,
+                        self.icon,
                         shapes,
                     );
                 }

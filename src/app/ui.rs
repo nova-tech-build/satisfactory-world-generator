@@ -550,7 +550,7 @@ impl eframe::App for App {
                     ResourceDisplayContent::Geysers(world.geysers.iter().by_ref().collect()),
                     &self.view_options,
                     view_options_highlight,
-                    None
+                    self.icons.geyser().map(|i| i.id()),
                 ));
             });
 

@@ -19,8 +19,6 @@ const string directory = "C:/Program Files (x86)/steam/steamapps/common/Satisfac
 const string mapping = "C:/Program Files (x86)/steam/steamapps/common/Satisfactory/CommunityResources/FactoryGame.usmap";
 const string levelPath = "FactoryGame/Content/FactoryGame/Map/GameLevel01/Persistent_Level.umap.PersistentLevel";
 
-provider.MappingsContainer = new FileUsmapTypeMappingsProvider(mapping);
-
 var oodlePath = Path.Combine(".", "oodle-data-shared.dll");
 OodleHelper.Initialize(oodlePath);
 

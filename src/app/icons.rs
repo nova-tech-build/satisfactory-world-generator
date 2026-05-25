@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-
 use crate::game::ResourceDescriptor;
 
 pub struct IconSet {
     resources: HashMap<ResourceDescriptor, egui::TextureHandle>,
+    geyser: Option<egui::TextureHandle>,
 }
 
 impl IconSet {
@@ -21,7 +21,7 @@ impl IconSet {
             (ResourceDescriptor::OreBauxite, include_bytes!("../../assets/icons/Desc_OreBauxite_C.png").as_slice()),
             (ResourceDescriptor::OreGold, include_bytes!("../../assets/icons/Desc_OreGold_C.png").as_slice()),
             (ResourceDescriptor::Sulfur, include_bytes!("../../assets/icons/Desc_Sulfur_C.png").as_slice()),
-            (ResourceDescriptor::OreUranium, include_bytes!("../../assets/icons/Desc_OreUranium_C.png").as_slice()),
+            (ResourceDescriptor::OreUranium, include_bytes!("../../assets/icons/Desc_OreUranium_C.png").as_slice())
         ]
         .into_iter()
         .filter_map(|(resource, bytes)| {
@@ -29,11 +29,21 @@ impl IconSet {
         })
         .collect();
 
-        Self { resources }
+        let geyser = load_texture(
+            ctx,
+            "geyser",
+            include_bytes!("../../assets/icons/Desc_GeneratorGeoThermal_C.png").as_slice(),
+        );
+
+        Self { resources, geyser }
     }
 
     pub fn resource(&self, resource: ResourceDescriptor) -> Option<&egui::TextureHandle> {
         self.resources.get(&resource)
+    }
+
+    pub fn geyser(&self) -> Option<&egui::TextureHandle> {
+        self.geyser.as_ref()
     }
 }
 
@@ -41,6 +51,7 @@ impl Default for IconSet {
     fn default() -> Self {
         Self {
             resources: HashMap::new(),
+            geyser: None,
         }
     }
 }
