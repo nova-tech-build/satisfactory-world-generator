@@ -13,6 +13,7 @@ use crate::{
     },
     game::{FrackingCore, GeyserNode, ResourceDescriptor, ResourceNode},
 };
+use crate::app::constants::get_purity_color;
 
 pub enum ResourceDisplayContent<'a> {
     ResourceNodes(ResourceDescriptor, Vec<&'a ResourceNode>),
@@ -197,11 +198,11 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                         get_purity_marker(node.purity),
                         center,
                         self.marker_base_size * scale,
-                        color,
+                        get_purity_color(node.purity),
                         true,
                         shapes,
                     );
-              
+
                     if let Some(icon) = self.icon {
                         let size = self.marker_base_size * 1.5 * scale;
 
@@ -247,6 +248,7 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                         &ResourceDisplayContent::convert_location(core.location),
                     );
 
+                    /* recommend exluding the core since the cluster implies a core
                     Self::marker_shape(
                         MarkerShape::Circle,
                         center,
@@ -255,7 +257,7 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                         false,
                         shapes,
                     );
-
+                    */
                     for satellite in &core.satellites {
                         let center = transform.position_from_point(
                             &ResourceDisplayContent::convert_location(satellite.location),
@@ -265,10 +267,29 @@ impl<'a> PlotItem for ResourceDisplay<'a> {
                             get_purity_marker(satellite.purity),
                             center,
                             0.75 * self.marker_base_size * scale,
-                            color,
-                            false,
+                            get_purity_color(satellite.purity),
+                            true,
                             shapes,
                         );
+
+                        if let Some(icon) = self.icon {
+                            let size = self.marker_base_size * 1.5 * scale;
+
+                            let rect = egui::Rect::from_center_size(
+                                center,
+                                egui::vec2(size, size),
+                            );
+
+                            shapes.push(egui::Shape::image(
+                                icon,
+                                rect,
+                                egui::Rect::from_min_max(
+                                    egui::pos2(0.0, 0.0),
+                                    egui::pos2(1.0, 1.0),
+                                ),
+                                egui::Color32::WHITE,
+                            ));
+                        }
                     }
                 }
             }

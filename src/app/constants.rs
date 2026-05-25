@@ -23,9 +23,20 @@ pub fn get_resource_color(resource: ResourceDescriptor) -> Color32 {
 }
 
 pub fn get_purity_marker(purity: ResourcePurity) -> MarkerShape {
+
+    return MarkerShape::Circle;
+    /* recommend all markers be circles and color purity like scim
     match purity {
         ResourcePurity::Impure => MarkerShape::Up,
         ResourcePurity::Normal => MarkerShape::Diamond,
         ResourcePurity::Pure => MarkerShape::Circle,
+    }*/
+}
+
+pub fn get_purity_color(purity: ResourcePurity) -> Color32 {
+    match purity {
+        ResourcePurity::Impure => Color32::from_rgb(210, 52, 48),
+        ResourcePurity::Normal => Color32::from_rgb(242, 100, 24),
+        ResourcePurity::Pure => Color32::from_rgb(128, 177, 57),
     }
 }
