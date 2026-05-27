@@ -519,7 +519,7 @@ impl eframe::App for App {
                     .transform()
                     .rect_from_values(&PlotPoint::new(0.0, 0.0), &PlotPoint::new(1.0, 1.0));
                 let scale = (test_rect.width() + test_rect.height()) / 2.0;
-                let base_size = (5000.0 * scale).clamp(20.0, 40.0);
+                let base_size = (5000.0 * scale).clamp(20.0, 30.0);
 
                 // resource nodes
                 for (resource, nodes) in &world.resource_nodes.iter().chunk_by(|n| n.resource) {
